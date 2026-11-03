@@ -1,0 +1,54 @@
+
+import React from 'react';
+
+import { redirect } from 'next/navigation';
+import { getQuestion, getAllTestCases } from '@/actions/contest.actions';
+import { auth } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+import { TestCaseManager } from '@/components/contest/test-case-manager';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+export default async function TestCasesPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string; questionId: string }> 
+}) {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect('/auth/signin');
+  }
+
+  const { slug, questionId } = await params;
+
+  const questionResult = await getQuestion(questionId);
+  
+  if (!questionResult.success || !questionResult.data) {
+    redirect('/contest');
+  }
+
+  const question = questionResult.data;
+  const testCasesResult = await getAllTestCases(questionId);
+  const testCases = testCasesResult.success && testCasesResult.data ? testCasesResult.data : [];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <Link href={`/contest/${slug}/manage`}>
+          <Button variant="outline" size="sm" className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Manage Contest
+          </Button>
+        </Link>
+        <h1 className="text-3xl font-bold mb-2">Test Cases</h1>
+        <p className="text-muted-foreground">{question.title}</p>
+      </div>
+
+      <TestCaseManager questionId={questionId} testCases={testCases} />
+    </div>
+  );
+}
