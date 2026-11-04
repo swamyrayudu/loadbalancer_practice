@@ -44,7 +44,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     updateAge: 7 * 24 * 60 * 60, // Only update session every 7 days (reduced from 24h)
   },
   // Disable unnecessary redirects and session checks
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  //
+  // Decoupled from NODE_ENV so the app can run in production mode behind the
+  // local nginx load balancer, which is served over plain http://localhost:8080.
+  // Secure cookies carry the `__Secure-` prefix and the Secure flag, and
+  // browsers refuse to send those over HTTP — sign-in would appear to succeed
+  // and then drop on the very next request, with no error anywhere.
+  // Set USE_SECURE_COOKIES=true wherever you actually terminate HTTPS.
+  useSecureCookies: process.env.USE_SECURE_COOKIES === 'true',
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       // Initial sign in - store user data in token

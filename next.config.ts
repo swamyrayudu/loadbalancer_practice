@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Load-balancer lab: build to a separate dir so a running dev server
+  // (which owns .next) cannot lock or clobber the production build.
+  // Unset LB_DIST_DIR = identical behaviour to before.
+  distDir: process.env.LB_DIST_DIR || ".next",
   /* config options here */
   experimental: {
     // Optimize client-side routing and reduce unnecessary fetches
