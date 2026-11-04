@@ -1,0 +1,28 @@
+# Local Redis for shared session/token state across the 3 app instances.
+#
+# Why local instead of your existing Upstash?
+# The benchmark in this project measured an Upstash cache HIT at 216 ms,
+# because Upstash is a remote HTTPS service in another region — slower than
+# querying Supabase directly (141 ms). For a session lookup that runs on every
+# request, that is fatal. Local Redis answers in well under 1 ms.
+#
+#   docker compose up -d
+#   docker compose down
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: talentpath-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
